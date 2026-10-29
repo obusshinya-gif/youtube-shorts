@@ -103,7 +103,20 @@ for k in range(5):
     im = scene_stock(k)
     for i in range(30): emit(im)
 for i in range(15): emit(scene_stock(4))
-bgm(f"{tmp}/bgm.wav")
+# BGM：R&B風オリジナル曲 3(サンセット)と5(シティ・ナイト)を日付で交互に使用
+# 第3引数で bgm/xxx.wav を直接指定も可。指定がなければ日付の通し番号が偶数→3、奇数→5
+import re, datetime, shutil
+here = os.path.dirname(os.path.abspath(__file__)); bdir = os.path.join(here, "..", "bgm")
+if len(sys.argv) > 3:
+    bgm_file = sys.argv[3]
+else:
+    mt = re.search(r"(\d{4})-(\d{2})-(\d{2})", os.path.basename(out))
+    day = datetime.date(*map(int, mt.groups())) if mt else datetime.datetime.utcnow().date()
+    bgm_file = os.path.join(bdir, "3_sunset_groove.wav" if day.toordinal() % 2 == 0 else "5_city_night.wav")
+if os.path.exists(bgm_file):
+    shutil.copy(bgm_file, f"{tmp}/bgm.wav"); print("BGM:", os.path.basename(bgm_file))
+else:
+    bgm(f"{tmp}/bgm.wav"); print("BGM: 合成オルゴール（R&B音源が見つからないため）")
 subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", "30", "-i", f"{tmp}/%04d.png",
                 "-i", f"{tmp}/bgm.wav", "-shortest", "-c:v", "libx264", "-pix_fmt", "yuv420p",
                 "-c:a", "aac", "-b:a", "160k", out], check=True)
